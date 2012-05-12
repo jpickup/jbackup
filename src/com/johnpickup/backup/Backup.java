@@ -16,10 +16,15 @@ public class Backup {
 	private String destinationPath;
 	private List<String> exclusions = new ArrayList<String>();
 	private BackupReport backupReport = new BackupReport();
-	private boolean showProgress;
+	private boolean showProgress = true;
+	int notificationFrequency = 100;
 	
 	public void performBackup() throws IOException {
 		backupReport.clear();
+		File destFile = new File(destinationPath);
+		if (!destFile.exists()) {
+			destFile.mkdirs();
+		}
 		RegexExclusionFilter catalogFilter = new RegexExclusionFilter();
 		catalogFilter.addExclusions(exclusions);
 		FileCatalog newCatalog = buildCatalog(sourcePath, catalogFilter);
@@ -28,8 +33,9 @@ public class Backup {
 		if (showProgress) {
 			System.out.println("Copying " + differences.getAdded().size() + " new files, " + 
 					differences.getChanged().size() + " changed files and removing " + 
-					differences.getRemoved() + " deleted files.");
+					differences.getRemoved().size() + " deleted files.");
 		}
+		backupReport.doneCatalog();
 		copyFiles(sourcePath, differences.getAdded(), destinationPath);
 		copyFiles(sourcePath, differences.getChanged(), destinationPath);
 		deleteFiles(differences.getRemoved(), destinationPath);
@@ -37,6 +43,7 @@ public class Backup {
 	}
 
 	private void deleteFiles(Set<String> removed, String targetPath) {
+		int i = 0;
 		for (String filename : removed) {
 			File fileToDelete = new File(targetPath + File.separator + filename);
 			try {
@@ -45,10 +52,14 @@ public class Backup {
 			} catch (IOException e) {
 				backupReport.logError("Failed to delete " + fileToDelete.getAbsolutePath() + " : " + e.toString());
 			}
+			if ((++i)%notificationFrequency == 0) {
+				System.out.print(".");
+			}
 		}
 	}
 
 	private void copyFiles(String sourcePath, Set<String> added, String targetPath) {
+		int i = 0;
 		for (String filename : added) {
 			File srcFile = new File(sourcePath + File.separator + filename);
 			File destFile = new File(targetPath + File.separator + filename);
@@ -57,6 +68,9 @@ public class Backup {
 				backupReport.add(new BackupReportItem(srcFile, destFile, BackupReportItem.BackupAction.COPIED));
 			} catch (IOException e) {
 				backupReport.logError("Failed to copy " + srcFile.getAbsolutePath() + " : " + e.toString());
+			}
+			if ((++i)%notificationFrequency == 0) {
+				System.out.print(".");
 			}
 		}
 	}

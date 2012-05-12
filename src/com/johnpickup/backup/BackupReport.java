@@ -10,6 +10,7 @@ public class BackupReport implements ErrorLogger {
 	private List<String> errors = new ArrayList<String>();
 	private List<BackupReportItem> items = new ArrayList<BackupReportItem>();
 	private Date startTime;
+	private Date startBackup;
 
 	public void clear() {
 		errors.clear();
@@ -64,8 +65,14 @@ public class BackupReport implements ErrorLogger {
 		
 		output.print("Processed " + items.size()+ " files totalling ");
 		output.print(totalSize/1024 + "kB in ");
-		long seconds = (endTime.getTime() - startTime.getTime())/1000;
-		output.print(seconds + "s");
-		output.println(" (" + (totalSize/1024/seconds) + "kB/s)");
+		long scanSeconds = (startBackup.getTime() - startTime.getTime())/1000;
+		long backupSeconds = (endTime.getTime() - startBackup.getTime())/1000;
+		output.print(backupSeconds + "s");
+		output.println(" (" + (totalSize/1024/backupSeconds) + "kB/s)");
+		output.println("Scan took " + scanSeconds + "s");
+	}
+
+	public void doneCatalog() {
+		startBackup = new Date();
 	}
 }
