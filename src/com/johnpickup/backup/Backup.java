@@ -65,6 +65,7 @@ public class Backup {
 			File destFile = new File(targetPath + File.separator + filename);
 			try {
 				FileUtils.copyFile(srcFile, destFile);
+				destFile.setLastModified(srcFile.lastModified());
 				backupReport.add(new BackupReportItem(srcFile, destFile, BackupReportItem.BackupAction.COPIED));
 			} catch (IOException e) {
 				backupReport.logError("Failed to copy " + srcFile.getAbsolutePath() + " : " + e.toString());
