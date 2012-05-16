@@ -15,12 +15,16 @@ public class Backup {
 	private String sourcePath;
 	private String destinationPath;
 	private List<String> exclusions = new ArrayList<String>();
+	private List<BackupEventListener> eventListeners = new ArrayList<BackupEventListener>();
 	private BackupReport backupReport = new BackupReport();
 	private boolean showProgress = true;
 	int notificationFrequency = 100;
 	
 	public void performBackup() throws IOException {
-		backupReport.clear();
+		for (BackupEventListener listener : eventListeners) {
+			listener.onStart();
+		}
+		
 		File destFile = new File(destinationPath);
 		if (!destFile.exists()) {
 			destFile.mkdirs();
@@ -35,43 +39,49 @@ public class Backup {
 					differences.getChanged().size() + " changed files and removing " + 
 					differences.getRemoved().size() + " deleted files.");
 		}
-		backupReport.doneCatalog();
+		for (BackupEventListener listener : eventListeners) {
+			listener.onScanComplete();
+		}
 		copyFiles(sourcePath, differences.getAdded(), destinationPath);
 		copyFiles(sourcePath, differences.getChanged(), destinationPath);
 		deleteFiles(differences.getRemoved(), destinationPath);
 		saveCatalog(newCatalog, destinationPath);
-	}
-
-	private void deleteFiles(Set<String> removed, String targetPath) {
-		int i = 0;
-		for (String filename : removed) {
-			File fileToDelete = new File(targetPath + File.separator + filename);
-			try {
-				FileUtils.forceDelete(fileToDelete);
-				backupReport.add(new BackupReportItem(null, fileToDelete, BackupReportItem.BackupAction.DELETED));
-			} catch (IOException e) {
-				backupReport.logError("Failed to delete " + fileToDelete.getAbsolutePath() + " : " + e.toString());
-			}
-			if ((++i)%notificationFrequency == 0) {
-				System.out.print(".");
-			}
+		for (BackupEventListener listener : eventListeners) {
+			listener.onBackupComplete();
 		}
 	}
 
 	private void copyFiles(String sourcePath, Set<String> added, String targetPath) {
-		int i = 0;
 		for (String filename : added) {
 			File srcFile = new File(sourcePath + File.separator + filename);
 			File destFile = new File(targetPath + File.separator + filename);
 			try {
 				FileUtils.copyFile(srcFile, destFile);
 				destFile.setLastModified(srcFile.lastModified());
-				backupReport.add(new BackupReportItem(srcFile, destFile, BackupReportItem.BackupAction.COPIED));
+
+				for (BackupEventListener listener : eventListeners) {
+					listener.onCopy(srcFile, destFile);
+				}
 			} catch (IOException e) {
-				backupReport.logError("Failed to copy " + srcFile.getAbsolutePath() + " : " + e.toString());
+				for (BackupEventListener listener : eventListeners) {
+					listener.onError(srcFile, "Failed to copy file : " + e.toString());
+				}
 			}
-			if ((++i)%notificationFrequency == 0) {
-				System.out.print(".");
+		}
+	}
+
+	private void deleteFiles(Set<String> removed, String targetPath) {
+		for (String filename : removed) {
+			File fileToDelete = new File(targetPath + File.separator + filename);
+			try {
+				FileUtils.forceDelete(fileToDelete);
+				for (BackupEventListener listener : eventListeners) {
+					listener.onDelete(fileToDelete);
+				}
+			} catch (IOException e) {
+				for (BackupEventListener listener : eventListeners) {
+					listener.onError(fileToDelete, "Failed to delete file : " + e.toString());
+				}
 			}
 		}
 	}
@@ -127,8 +137,12 @@ public class Backup {
 		this.exclusions = exclusions;
 	}
 
-	public BackupReport getBackupReport() {
-		return backupReport;
+	public void addEventListener(BackupEventListener listener) {
+		eventListeners.add(listener);
+	}
+	
+	public void removeEventListener(BackupEventListener listener) {
+		eventListeners.remove(listener);
 	}
 
 	/**
@@ -150,9 +164,14 @@ public class Backup {
 			System.out.println("Excluding " + arguments.getExlusions());
 
 			Backup backup = new Backup();
+			BackupReport report = new BackupReport();
 			backup.setSourcePath(sourcePath);
 			backup.setDestinationPath(destinationPath);
 			backup.setExclusions(arguments.getExlusions());
+			backup.addEventListener(report);
+			BackupProgress progress = new BackupProgress();
+			progress.setProgressInterval(10);
+			backup.addEventListener(progress);
 			try {
 				backup.performBackup();
 			} catch (Exception e) {
@@ -163,7 +182,7 @@ public class Backup {
 				System.exit(1);
 			}
 			if (!arguments.isNoreport()) {
-				backup.getBackupReport().outputTo(System.out);
+				report.outputTo(System.out);
 			}
 		}
 		catch (Exception e) {

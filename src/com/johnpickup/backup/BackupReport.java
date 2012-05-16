@@ -1,29 +1,32 @@
 package com.johnpickup.backup;
 
+import java.io.File;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class BackupReport implements ErrorLogger {
+import com.johnpickup.backup.BackupReportItem.BackupAction;
+
+public class BackupReport implements BackupEventListener {
 
 	private List<String> errors = new ArrayList<String>();
 	private List<BackupReportItem> items = new ArrayList<BackupReportItem>();
 	private Date startTime;
 	private Date startBackup;
+	private Date endBackup;
 
 	public void clear() {
 		errors.clear();
 		items.clear();
-		startTime = new Date();
 	}
 
-	public void add(BackupReportItem backupReportItem) {
+	private void add(BackupReportItem backupReportItem) {
 		items.add(backupReportItem);		
 	}
 
 	@Override
-	public void logError(String error) {
+	public void onError(File source, String error) {
 		errors.add(error);
 	}
 
@@ -36,8 +39,6 @@ public class BackupReport implements ErrorLogger {
 	}
 
 	public void outputTo(PrintStream output) {
-		Date endTime = new Date();
-		
 		if (errors.size() > 0) {
 			output.println("*** ERRORS OCCURRED DURING BACKUP ***");
 			for (String error : errors) {
@@ -66,13 +67,40 @@ public class BackupReport implements ErrorLogger {
 		output.print("Processed " + items.size()+ " files totalling ");
 		output.print(totalSize/1024 + "kB in ");
 		long scanSeconds = (startBackup.getTime() - startTime.getTime())/1000;
-		long backupSeconds = (endTime.getTime() - startBackup.getTime())/1000;
-		output.print(backupSeconds + "s");
-		output.println(" (" + (totalSize/1024/backupSeconds) + "kB/s)");
+		long backupSeconds = (endBackup.getTime() - startBackup.getTime())/1000;
+		output.print(Utils.secondsToTimeString(backupSeconds) + "s");
+		if (backupSeconds > 0) {
+			output.println(" (" + (totalSize/1024/backupSeconds) + "kB/s)");
+		}
+		else {
+			output.println();
+		}
 		output.println("Scan took " + scanSeconds + "s");
 	}
 
-	public void doneCatalog() {
+	@Override
+	public void onCopy(File source, File target) {
+		add(new BackupReportItem(source, target, BackupAction.COPIED));
+	}
+
+	@Override
+	public void onDelete(File target) {
+		add(new BackupReportItem(null, target, BackupAction.DELETED));
+	}
+
+	@Override
+	public void onStart() {
+		clear();
+		startTime = new Date();
+	}
+
+	@Override
+	public void onScanComplete() {
 		startBackup = new Date();
+	}
+
+	@Override
+	public void onBackupComplete() {
+		endBackup = new Date();		
 	}
 }

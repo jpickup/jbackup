@@ -9,7 +9,7 @@ import java.util.List;
 public class DirectoryWalker {
 	
 	private List<Filter> filters = new ArrayList<Filter>();
-	private ErrorLogger errorLogger=null;
+	private BackupEventListener errorLogger=null;
 
 	public List<File> listEntries(File file) {
 		ArrayList<File> result = new ArrayList<File>();
@@ -25,18 +25,18 @@ public class DirectoryWalker {
 				}
 			}
 			else {
-				logError("Directory returns null listFiles() : " + file);
+				logError(file, "Directory returns null listFiles()");
 			}
 		}
 		else {
-			logError("Not a known file type " + file.toString());
+			logError(file, "Not a known file type (neither a file nor a directory)");
 		}
 		return result;
 	}
 
-	private void logError(String error) {
+	private void logError(File source, String error) {
 		if (errorLogger != null) {
-			errorLogger.logError(error);
+			errorLogger.onError(source, error);
 		}
 	}
 
@@ -50,7 +50,7 @@ public class DirectoryWalker {
 			}
 		} catch (IOException e) {
 			result = false;
-			logError(e.toString());
+			logError(file, e.toString());
 		}
 		return result;		
 	}
@@ -76,11 +76,11 @@ public class DirectoryWalker {
 		}
 	}
 
-	public ErrorLogger getErrorLogger() {
+	public BackupEventListener getErrorLogger() {
 		return errorLogger;
 	}
 
-	public void setErrorLogger(ErrorLogger errorLogger) {
+	public void setErrorLogger(BackupEventListener errorLogger) {
 		this.errorLogger = errorLogger;
 	}
 
