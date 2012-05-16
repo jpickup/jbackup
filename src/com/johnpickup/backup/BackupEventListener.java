@@ -7,6 +7,6 @@ public interface BackupEventListener {
 	void onDelete(File target);
 	void onError(File source, String error);
 	void onStart();
-	void onScanComplete();
+	void onScanComplete(long totalFilesToCopy, long totalFilesToDelete, long totalBytesToCopy);
 	void onBackupComplete();
 }

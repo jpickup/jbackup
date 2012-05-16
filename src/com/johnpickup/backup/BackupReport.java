@@ -95,7 +95,7 @@ public class BackupReport implements BackupEventListener {
 	}
 
 	@Override
-	public void onScanComplete() {
+	public void onScanComplete(long totalFilesToCopy, long totalFilesToDelete, long totalBytesToCopy) {
 		startBackup = new Date();
 	}
 

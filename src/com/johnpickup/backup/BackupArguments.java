@@ -18,6 +18,9 @@ public class BackupArguments {
 	@Parameter(names = "-progress", description = "Display Progress")
 	private boolean progress;
 
+	@Parameter(names = "-progressInterval", description = "Progress Interval (# files processed)")
+	private int progressInterval = 100;
+
 	public List<String> getDirectories() {
 		return directories;
 	}
@@ -32,5 +35,9 @@ public class BackupArguments {
 
 	public boolean isProgress() {
 		return progress;
+	}
+
+	public int getProgressInterval() {
+		return progressInterval;
 	}
 }

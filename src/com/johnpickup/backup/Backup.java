@@ -39,12 +39,16 @@ public class Backup {
 					differences.getChanged().size() + " changed files and removing " + 
 					differences.getRemoved().size() + " deleted files.");
 		}
+
 		for (BackupEventListener listener : eventListeners) {
-			listener.onScanComplete();
+
+			listener.onScanComplete(differences.getTotalFilesToCopy(), differences.getTotalFilesToDelete(), differences.getTotalBytesToCopy());
 		}
+		
 		copyFiles(sourcePath, differences.getAdded(), destinationPath);
 		copyFiles(sourcePath, differences.getChanged(), destinationPath);
 		deleteFiles(differences.getRemoved(), destinationPath);
+		
 		saveCatalog(newCatalog, destinationPath);
 		for (BackupEventListener listener : eventListeners) {
 			listener.onBackupComplete();
@@ -171,7 +175,7 @@ public class Backup {
 			backup.addEventListener(backupReport);
 			if (arguments.isProgress()) {
 				BackupProgress progress = new BackupProgress();
-				progress.setProgressInterval(10);
+				progress.setProgressInterval(arguments.getProgressInterval());
 				backup.addEventListener(progress);
 			}
 			try {

@@ -10,6 +10,10 @@ public class BackupProgress implements BackupEventListener {
 	private int progressInterval = 100;
 	private Date intervalStart = new Date();
 	private long bytesCopied = 0;
+	private long totalFilesToCopy = 0;
+	private long totalFilesToDelete = 0;
+	private long totalBytesToCopy = 0;
+	private int allBytesCopied;
 	
 	@Override
 	public void onCopy(File source, File target) {
@@ -36,7 +40,11 @@ public class BackupProgress implements BackupEventListener {
 	}
 
 	@Override
-	public void onScanComplete() {
+	public void onScanComplete(long totalFilesToCopy, long totalFilesToDelete, long totalBytesToCopy) {
+		this.totalFilesToCopy = totalFilesToCopy;
+		this.totalFilesToDelete = totalFilesToDelete;
+		this.totalBytesToCopy = totalBytesToCopy;
+		this.allBytesCopied=0;
 		System.out.println("Starting backup...");
 		reset();
 	}
@@ -54,7 +62,8 @@ public class BackupProgress implements BackupEventListener {
 
 	private void reportProgress() {
 		long seconds = ((new Date()).getTime() - intervalStart.getTime())/1000;
-		System.out.print("Copied "+ bytesCopied/1024 + "kB");
+		long percBytes = (allBytesCopied * 100) / totalBytesToCopy;
+		System.out.print("Copied "+ bytesCopied/1024 + "kB (" + percBytes + "%)");
 		if (seconds > 0) {
 			System.out.print(" in " + seconds + "s (" + bytesCopied/1024/seconds +"kB/s)");
 		}
