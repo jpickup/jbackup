@@ -32,7 +32,7 @@ public class CatalogComparer {
 		for (String name : to) {
 			if (!from.contains(name)) {
 				added.add(name);
-				totalBytesToCopy += from.getCharacteristics(name).getSize();
+				totalBytesToCopy += to.getCharacteristics(name).getSize();
 			}
 		}
 	}
