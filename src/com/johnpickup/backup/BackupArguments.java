@@ -15,6 +15,9 @@ public class BackupArguments {
 	@Parameter(names = "-noreport", description = "Don't output a report")
 	private boolean noreport = false;
 
+	@Parameter(names = "-progress", description = "Display Progress")
+	private boolean progress;
+
 	public List<String> getDirectories() {
 		return directories;
 	}
@@ -25,5 +28,9 @@ public class BackupArguments {
 
 	public boolean isNoreport() {
 		return noreport;
+	}
+
+	public boolean isProgress() {
+		return progress;
 	}
 }

@@ -16,7 +16,7 @@ public class Backup {
 	private String destinationPath;
 	private List<String> exclusions = new ArrayList<String>();
 	private List<BackupEventListener> eventListeners = new ArrayList<BackupEventListener>();
-	private BackupReport backupReport = new BackupReport();
+	private static BackupReport backupReport = new BackupReport();
 	private boolean showProgress = true;
 	int notificationFrequency = 100;
 	
@@ -164,14 +164,16 @@ public class Backup {
 			System.out.println("Excluding " + arguments.getExlusions());
 
 			Backup backup = new Backup();
-			BackupReport report = new BackupReport();
+			backupReport = new BackupReport();
 			backup.setSourcePath(sourcePath);
 			backup.setDestinationPath(destinationPath);
 			backup.setExclusions(arguments.getExlusions());
-			backup.addEventListener(report);
-			BackupProgress progress = new BackupProgress();
-			progress.setProgressInterval(10);
-			backup.addEventListener(progress);
+			backup.addEventListener(backupReport);
+			if (arguments.isProgress()) {
+				BackupProgress progress = new BackupProgress();
+				progress.setProgressInterval(10);
+				backup.addEventListener(progress);
+			}
 			try {
 				backup.performBackup();
 			} catch (Exception e) {
@@ -182,7 +184,7 @@ public class Backup {
 				System.exit(1);
 			}
 			if (!arguments.isNoreport()) {
-				report.outputTo(System.out);
+				backupReport.outputTo(System.out);
 			}
 		}
 		catch (Exception e) {
