@@ -68,7 +68,7 @@ public class BackupReport implements BackupEventListener {
 		output.print(totalSize/1024 + "kB in ");
 		long scanSeconds = (startBackup.getTime() - startTime.getTime())/1000;
 		long backupSeconds = (endBackup.getTime() - startBackup.getTime())/1000;
-		output.print(Utils.secondsToTimeString(backupSeconds) + "s");
+		output.print(Utils.secondsToTimeString(backupSeconds));
 		if (backupSeconds > 0) {
 			output.println(" (" + (totalSize/1024/backupSeconds) + "kB/s)");
 		}

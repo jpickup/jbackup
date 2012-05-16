@@ -19,6 +19,7 @@ public class BackupProgress implements BackupEventListener {
 	public void onCopy(File source, File target) {
 		filesCopied++;
 		bytesCopied += source.length();
+		allBytesCopied += source.length();
 
 		doEvent();
 	}
