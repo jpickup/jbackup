@@ -10,7 +10,7 @@ import java.util.List;
  *
  */
 public class CatalogBuilder {
-	private static final String CATALOG_FILE = "jbackup.cat";
+	private static final String CATALOG_FILE = "catalog.cat";
 
 	/**
 	 * @param args

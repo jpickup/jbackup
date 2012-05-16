@@ -63,7 +63,9 @@ public class BackupProgress implements BackupEventListener {
 
 	private void reportProgress() {
 		long seconds = ((new Date()).getTime() - intervalStart.getTime())/1000;
-		long percBytes = (allBytesCopied * 100) / totalBytesToCopy;
+		long percBytes = 0;
+		if (totalBytesToCopy > 0)
+			percBytes = (allBytesCopied * 100) / totalBytesToCopy;
 		System.out.print("Copied "+ bytesCopied/1024 + "kB (" + percBytes + "%)");
 		if (seconds > 0) {
 			System.out.print(" in " + seconds + "s (" + bytesCopied/1024/seconds +"kB/s)");
