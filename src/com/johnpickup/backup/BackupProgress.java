@@ -7,6 +7,7 @@ public class BackupProgress implements BackupEventListener {
 	private long eventCount = 0;
 	private long filesCopied = 0;
 	private long filesDeleted = 0;
+	private long errors = 0;
 	private int progressInterval = 100;
 	private Date intervalStart = new Date();
 	private long bytesCopied = 0;
@@ -33,6 +34,8 @@ public class BackupProgress implements BackupEventListener {
 
 	@Override
 	public void onError(File source, String error) {
+		errors++;
+		doEvent();
 	}
 
 	@Override
@@ -70,7 +73,7 @@ public class BackupProgress implements BackupEventListener {
 		if (seconds > 0) {
 			System.out.print(" in " + seconds + "s (" + bytesCopied/1024/seconds +"kB/s)");
 		}
-		System.out.println("  "+ filesCopied + " copied, " + filesDeleted + " deleted");
+		System.out.println("  "+ filesCopied + " copied, " + filesDeleted + " deleted, " + errors + " errors");
 		reset();
 	}
 
@@ -78,6 +81,7 @@ public class BackupProgress implements BackupEventListener {
 		bytesCopied=0;
 		filesCopied=0;
 		filesDeleted=0;
+		errors=0;
 		intervalStart=new Date();
 	}
 
