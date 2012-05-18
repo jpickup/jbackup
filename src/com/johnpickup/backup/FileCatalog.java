@@ -65,9 +65,11 @@ public class FileCatalog implements Iterable<String> {
 		while (line != null) {
 			String[] parts = line.split(delim);
 			if (parts.length != 3) {
-				throw new RuntimeException("Invalid entry in catalog file " + filename + " expected an entry but got " + line);
+				System.err.println("Skipping invalid entry in catalog file " + filename + " expected an entry but got " + line);
 			}
-			add(parts[0], Long.valueOf(parts[1]), Long.valueOf(parts[2]));
+			else {
+				add(parts[0], Long.valueOf(parts[1]), Long.valueOf(parts[2]));
+			}
 			line = reader.readLine();
 		}
 		reader.close();
